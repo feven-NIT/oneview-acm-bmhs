@@ -1,0 +1,14 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: oneview-acm-bmhs
+  namespace: open-cluster-management
+spec:
+  host: oneview-acm-bmhs.apps.ocp1.redhat.hpecic.net
+  to:
+    kind: Service
+    name: oneview-acm-bmhs
+    weight: 100
+  port:
+    targetPort: 8080
+  wildcardPolicy: None

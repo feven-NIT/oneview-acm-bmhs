@@ -1,0 +1,24 @@
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: "oneview-acm-bmhs" 
+  namespace: open-cluster-management
+spec:
+  output:
+    to:
+      kind: DockerImage
+      name: 'quay.io/fdavalo/oneview-acm-bmhs:latest'
+    pushSecret:
+      name: fdavalo-fdavalo-robot-pull-secret
+  strategy:
+    type: Source
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        namespace: openshift
+        name: 'python:3.8'
+  source:
+    type: Git
+    git:
+      uri: 'https://github.com/fdavalo/oneview-acm-bmhs'
+  runPolicy: Serial

@@ -1,0 +1,87 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: oneview-acm-bmhs
+  namespace: open-cluster-management
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oneview-acm-bmhs
+  template:
+    metadata:
+      labels:
+        app: oneview-2-acm-bmhs
+    spec:
+      containers:
+        - name: cli
+          image: 'registry.access.redhat.com/ubi7/ubi'
+          command:
+            - bash
+            - '-c'
+            - >-
+              curl http://downloads.openshift-console:80/amd64/linux/oc.tar -o oc.tar
+              tar xvf oc.tar
+              while [[ 1 ]]; 
+              do
+               find /tmp -name *.cluster -mmin -60 -delete
+               find /tmp -name kubeconfig.* -mmin -60 -delete
+               for cluster in `./oc get managedclusters -n bm4 | awk '{if ($1 != "NAME") print $1;}'`; do
+                if [[ ! -f /tmp/kubeconfig.$cluster ]]; then 
+                 ./oc -n $cluster get secret | grep "\-admin\-kubeconfig" | awk '{system("./oc -n '$cluster' get secret "$1" -o jsonpath=\"{.data.kubeconfig}\" | base64 -d > /tmp/kubeconfig.'$cluster'");}'
+                fi
+                if [[ -f /tmp/kubeconfig.$cluster ]]; then 
+                 KUBECONFIG=/tmp/kubeconfig.$cluster ./oc get nodes | awk '{if ($1!="NAME") system("echo '$cluster' > /tmp/"$1".cluster");}'
+                fi
+               done
+               /bin/rm -f bmhs/*.cluster bmhs/*.bma
+               cp /tmp/*.cluster bmhs
+               /bin/rm -f old/*; 
+               for file in `ls -1 bmhs/*.yaml`; do mv $file old; done;
+               curl http://localhost:8080/bmhs.js 2>/dev/null 1>/dev/null; 
+               for host in `ls -1 bmhs | grep "\.yaml$" | awk -F\. '{print $1;}'`; do 
+                ./oc apply -f bmhs/$host.yaml
+                mac=`cat bmhs/$host.mac`
+                curl http://cluster-ip.redhat.hpecic.net:8080 -d "host=$host&mac=$mac" 2>/dev/null 1>/dev/null
+               done;
+               for file in `ls -1 old`; do if [[ ! -f bmhs/$file ]]; then ./oc delete -f old/$file; fi; done;
+               ./oc get baremetalhosts.metal3.io -n bm4 | awk '{if ($1!="NAME") system("touch /bmhs/"$1".bma");}'
+               for host in `ls -1 bmhs | grep "\.bma$"  | awk -F\. '{print $1;}'`; do if [[ ! -f bmhs/$host.yaml ]]; then ./oc delete baremetalhosts.metal3.io $host -n bm4; fi; done;
+               sleep 60; 
+              done
+          volumeMounts:
+            - name: bmhs
+              mountPath: bmhs        
+            - name: last
+              mountPath: old                 
+        - name: server
+          command:
+            - python3
+            - server.py
+            - '8080'            
+          env:
+            - name: ONEVIEWSDK_IP
+              value: oneview.redhat.hpecic.net
+            - name: ONEVIEWSDK_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: oneview
+                  key: username
+            - name: ONEVIEWSDK_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: oneview
+                  key: password
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          image: 'quay.io/fdavalo/oneview-2-acm-bmhs:latest'
+          volumeMounts:
+            - name: bmhs
+              mountPath: /opt/app-root/src/bmhs          
+      serviceAccount: multicluster-operators
+      volumes:
+        - name: bmhs
+          emptyDir: {}   
+        - name: last
+          emptyDir: {}            

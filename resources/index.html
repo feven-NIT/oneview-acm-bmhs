@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8"/>
+    <title>BareMetal bmhs with OneView</title>
+
+    <link rel="stylesheet" href="index.css"/>
+    <script src="bmhs.js"></script>
+    <script language="javascript">
+
+function showBmh(bmh) {
+        if (! bmhs[bmh]) return "";
+        var html = "<table class='table'><tr class='row header'><td class='cell header1' colspan='2'>"+bmh+"</td></tr>";
+        if (bmhs[bmh].role != null) {
+                html += "<tr class='row'>";
+                html += "<td class='cell'>ROLE</td><td>" + bmhs[bmh].role + "</td>";
+                html += "</tr>";
+        }
+        if (bmhs[bmh].url != null) {
+                html += "<tr class='row'>";
+                html += "<td class='cell'>URL</td><td>" + bmhs[bmh].url + "</td>";
+                html += "</tr>";
+        }
+        if (bmhs[bmh].mac != null) {
+                html += "<tr class='row'>";
+                html += "<td class='cell'>MAC</td><td>" + bmhs[bmh].mac + "</td>";
+                html += "</tr>";
+        }
+        if (bmhs[bmh].cluster != null) {
+                html += "<tr class='row'>";
+                html += "<td class='cell'>CLUSTER</td><td>" + bmhs[bmh].cluster + "</td>";
+                html += "</tr>";
+        }    
+        if (bmhs[bmh].template != null) {
+                html += "<tr class='row'>";
+                html += "<td class='cell'>TEMPLATE</td><td>" + bmhs[bmh].template + "</td>";
+                html += "</tr>";
+        }        
+        if (bmhs[bmh].power != null) {
+                html += "<tr class='row'>";
+                html += "<td class='cell'>POWER</td><td>" + bmhs[bmh].power + "</td>";
+                html += "</tr>";
+        }      
+        html += "</table>";
+        return html;
+}
+        
+function showbmhs() {
+        var div = document.getElementById("bmhs");
+        var html = "<table>";
+        var maxrow = 3;
+        var i = 0;
+        for (var bmh in bmhs) {
+                if (i%maxrow == 0) html += "<tr>";
+                html += "<td><div id='bmh:"+bmh+"'></div></td>"
+                if (i%maxrow == (maxrow-1)) html += "</tr>";
+                i += 1;
+        }
+        html += "</table>";
+        div.innerHTML = html;
+        for (var bmh in bmhs) {
+            element = document.getElementById("bmh:"+bmh);
+            element.innerHTML = showBmh(bmh);
+        }
+}
+
+
+function init() {
+        showbmhs();
+}
+
+  </script>
+
+</head>
+<body onload="init()">
+
+<h2>List of provisionned bmhs</h2>
+<div id="bmhs" class='wrapper'>
+</div>
+<br/>
+<form method="post">
+  Name of the new bmh (will use server serial number if not provided): <input type="text" name="bmh" size="10"/>
+  <br/>
+  Template for the new bmh <select name="template">
+        <option selected="selected" value="Openshift-BM">Openshift-BM</option>
+        <option value="Openshift-BM2">Openshift-BM2</option>
+  </select>
+  <br/>
+  <input type="submit" value="Add the bmh"/>
+</form>
+
+</body>
+</html>

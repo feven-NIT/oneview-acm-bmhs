@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: oneview-acm-bmhs
+  namespace: open-cluster-management
+spec:
+  selector:
+    app: oneview-acm-bmhs
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

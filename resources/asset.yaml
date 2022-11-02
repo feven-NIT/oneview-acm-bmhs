@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: baremetal-bmh-secret
+  namespace: bm4
+type: Opaque
+data:
+  password: @password64@
+  username: @username64@
+---
+apiVersion: metal3.io/v1alpha1
+kind: BareMetalHost
+metadata:
+  name: @name@
+  namespace: bm4
+spec:
+  bmc:
+    address: @url@
+    disableCertificateVerification: true
+    credentialsName: baremetal-bmh-secret
+  bootMACAddress: @mac@
+  role: @role@
+  automatedCleaningMode: disabled
+  online: true
