@@ -13,6 +13,14 @@ spec:
       labels:
         app: oneview-acm-bmhs
     spec:
+      restartPolicy: Always
+      serviceAccountName: multicluster-operators
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      securityContext: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      imagePullPolicy: IfNotPresent
       containers:
         - name: cli
           image: 'registry.access.redhat.com/ubi7/ubi'
@@ -20,21 +28,23 @@ spec:
             - bash
             - '-c'
             - >-
-              curl http://downloads.openshift-console:80/amd64/linux/oc.tar -o oc.tar
+              curl http://downloads.openshift-console:80/amd64/linux/oc.tar -o
+              oc.tar
+
               tar xvf oc.tar
-              while [[ 1 ]]; 
-              do
+
+              while [[ 1 ]];  do
                find /tmp -name *.cluster -mmin -60 -delete
                find /tmp -name kubeconfig.* -mmin -60 -delete
                for cluster in `./oc get managedclusters -n bm4 | awk '{if ($1 != "NAME") print $1;}'`; do
                 if [[ ! -f /tmp/kubeconfig.$cluster ]]; then 
-                 ./oc -n $cluster get secret | grep "\-admin\-kubeconfig" | awk '{system("./oc -n '$cluster' get secret "$1" -o jsonpath=\"{.data.kubeconfig}\" | base64 -d > /tmp/kubeconfig.'$cluster'");}'
+                ./oc -n $cluster get secret | grep "\-admin\-kubeconfig" | awk '{system("./oc -n '$cluster' get secret "$1" -o jsonpath=\"{.data.kubeconfig}\" | base64 -d > /tmp/kubeconfig.'$cluster'");}'
                 fi
                 if [[ -f /tmp/kubeconfig.$cluster ]]; then 
-                 KUBECONFIG=/tmp/kubeconfig.$cluster ./oc get nodes | awk '{if ($1!="NAME") system("echo '$cluster' > /tmp/"$1".cluster");}'
+                KUBECONFIG=/tmp/kubeconfig.$cluster ./oc get nodes | awk '{if ($1!="NAME") system("echo '$cluster' > /tmp/"$1".cluster");}'
                 fi
-               done
-               /bin/rm -f bmhs/*.cluster bmhs/*.bma
+               done 
+               /bin/rm -f bmhs/*.cluster bmhs/*.bma 
                cp /tmp/*.cluster bmhs
                /bin/rm -f old/*; 
                for file in `ls -1 bmhs/*.yaml`; do mv $file old; done;
@@ -46,12 +56,14 @@ spec:
                done;
                for file in `ls -1 old`; do if [[ ! -f bmhs/$file ]]; then ./oc delete -f old/$file; fi; done;
                ./oc get baremetalhosts.metal3.io -n bm4 | awk '{if ($1!="NAME") system("touch /bmhs/"$1".bma");}'
-               for host in `ls -1 bmhs | grep "\.bma$"  | awk -F\. '{print $1;}'`; do if [[ ! -f bmhs/$host.yaml ]]; then ./oc delete baremetalhosts.metal3.io $host -n bm4; fi; done;
+               for host in `ls -1 bmhs | grep "\.bma$"  | awk -F\. '{print $1;}'`; do if [[ ! -f bmhs/$host.yaml ]]; then ./oc delete baremetalhosts $host -n bm4; fi; done;
                sleep 60; 
-              done
+               done
           volumeMounts:
             - name: bmhs
-              mountPath: bmhs        
+              mountPath: bmhs 
+            - name: hosts
+              mountPath: hosts        
             - name: last
               mountPath: old                 
         - name: server
@@ -75,13 +87,17 @@ spec:
           ports:
             - containerPort: 8080
               protocol: TCP
-          image: 'quay.io/feven/oneview-acm-bmhs:latest'
+          image: 'quay.io/feven/oneview-2-acm-host:latest'
           volumeMounts:
             - name: bmhs
-              mountPath: /opt/app-root/src/bmhs          
+              mountPath: /opt/app-root/src/bmhs  
+            - name: hosts
+              mountPath: /opt/app-root/src/hosts        
       serviceAccount: multicluster-operators
       volumes:
         - name: bmhs
           emptyDir: {}   
+        - name: hosts
+          emptyDir: {}  
         - name: last
           emptyDir: {}            
