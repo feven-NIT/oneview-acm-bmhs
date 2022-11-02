@@ -1,13 +1,15 @@
 kind: BuildConfig
 apiVersion: build.openshift.io/v1
 metadata:
-  name: "oneview-acm-bmhs" 
+  name: oneview-acm-bmhs
   namespace: open-cluster-management
 spec:
   output:
     to:
       kind: DockerImage
       name: 'quay.io/feven/oneview-acm-bmhs:latest'
+    pushSecret:
+      name: quay-feven-secret
   strategy:
     type: Source
     sourceStrategy:
