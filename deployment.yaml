@@ -75,7 +75,7 @@ spec:
           ports:
             - containerPort: 8080
               protocol: TCP
-          image: 'quay.io/fdavalo/oneview-2-acm-bmhs:latest'
+          image: 'quay.io/feven/oneview-acm-bmhs:latest'
           volumeMounts:
             - name: bmhs
               mountPath: /opt/app-root/src/bmhs          
