@@ -7,9 +7,7 @@ spec:
   output:
     to:
       kind: DockerImage
-      name: 'quay.io/fdavalo/oneview-acm-bmhs:latest'
-    pushSecret:
-      name: fdavalo-fdavalo-robot-pull-secret
+      name: 'quay.io/feven/oneview-acm-bmhs:latest'
   strategy:
     type: Source
     sourceStrategy:
@@ -20,5 +18,5 @@ spec:
   source:
     type: Git
     git:
-      uri: 'https://github.com/fdavalo/oneview-acm-bmhs'
+      uri: 'https://github.com/feven-redhat/oneview-acm-bmhs'
   runPolicy: Serial
