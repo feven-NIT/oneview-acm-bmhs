@@ -13,6 +13,8 @@ kind: BareMetalHost
 metadata:
   name: @name@
   namespace: bm4
+labels:
+  infraenvs.agent-install.openshift.io: "bm4"
 spec:
   bmc:
     address: @url@
