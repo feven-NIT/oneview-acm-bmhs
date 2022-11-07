@@ -107,7 +107,7 @@ def bmhs():
           bmh['mac-baremetal']=conn['mac']        
       for hard in server_hardware_all:
         if hard['uri'] == profile['serverHardwareUri'] and hard['maintenanceMode'] == False:
-          bmh['url']='ipmi://'+hard['mpHostInfo']['mpIpAddresses'][0]['address']
+          bmh['url']=hard['mpHostInfo']['mpIpAddresses'][0]['address']
           bmh['power'] = hard['powerState']
       cluster = None
       try:
