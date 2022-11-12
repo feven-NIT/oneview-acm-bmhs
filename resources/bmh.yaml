@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: baremetal-bmh-secret
+  name: baremetal-bmh-secret-@name@
   namespace: bm4
 type: Opaque
 data:
