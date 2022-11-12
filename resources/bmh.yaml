@@ -19,7 +19,7 @@ spec:
   bmc:
     address: @url@
     disableCertificateVerification: true
-    credentialsName: baremetal-bmh-secret
+    credentialsName: baremetal-bmh-secret-@name@
   bootMACAddress: @mac@
   role: @role@
   automatedCleaningMode: disabled
