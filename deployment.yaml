@@ -60,9 +60,11 @@ spec:
                ./oc get baremetalhosts.metal3.io -n bm4 | awk '{if ($1!="NAME") system("touch /bmhs/"$1".bmh");}'
                for host in `ls -1 bmhs | grep "\.bmh$"  | awk -F\. '{print $1;}'`; do if [[ ! -f bmhs/$host.yaml ]]; then ./oc delete baremetalhosts $host -n bm4; fi; done;
                if [ "$create" = true ] ; then
-                 while [ "$(./oc get bmh $(ls -1 bmhs | grep "\.yaml$" | awk -F\. '{print $1;}') -n bm4 -o jsonpath='{.status.provisioning.state}')" != "provisioned" ]; do
-                  sleep 30
-                  echo "Waiting for bmh to be provisionned."
+                 for bmh_name in `ls -1 bmhs | grep "\.yaml$" | awk -F\. '{print $1;}'`; do
+                  while [ "$(./oc get bmh $bmh_name -n bm4 -o jsonpath='{.status.provisioning.state}')" != "provisioned" ]; do
+                    sleep 30
+                    echo "Waiting for bmh to be provisionned."
+                  done
                 done
                fi
                done
