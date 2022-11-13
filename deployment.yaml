@@ -44,20 +44,27 @@ spec:
                 KUBECONFIG=/tmp/kubeconfig.$cluster ./oc get nodes | awk '{if ($1!="NAME") system("echo '$cluster' > /tmp/"$1".cluster");}'
                 fi
                done 
-               /bin/rm -f bmhs/*.cluster bmhs/*.bma 
+               /bin/rm -f bmhs/*.cluster bmhs/*.bmh
                cp /tmp/*.cluster bmhs
                /bin/rm -f old/*; 
                for file in `ls -1 bmhs/*.yaml`; do mv $file old; done;
-               curl http://localhost:8080/bmhs.js 2>/dev/null 1>/dev/null; 
+               curl http://localhost:8080/bmhs.js 2>/dev/null 1>/dev/null;
+               create=false 
                for host in `ls -1 bmhs | grep "\.yaml$" | awk -F\. '{print $1;}'`; do 
                 ./oc apply -f bmhs/$host.yaml
+                create=true
                 mac=`cat bmhs/$host.mac`
                 curl http://cluster-ip.redhat.hpecic.net:8080 -d "host=$host&mac=$mac" 2>/dev/null 1>/dev/null
                done;
                for file in `ls -1 old`; do if [[ ! -f bmhs/$file ]]; then ./oc delete -f old/$file; fi; done;
-               ./oc get baremetalhosts.metal3.io -n bm4 | awk '{if ($1!="NAME") system("touch /bmhs/"$1".bma");}'
-               for host in `ls -1 bmhs | grep "\.bma$"  | awk -F\. '{print $1;}'`; do if [[ ! -f bmhs/$host.yaml ]]; then ./oc delete baremetalhosts $host -n bm4; fi; done;
-               sleep 60; 
+               ./oc get baremetalhosts.metal3.io -n bm4 | awk '{if ($1!="NAME") system("touch /bmhs/"$1".bmh");}'
+               for host in `ls -1 bmhs | grep "\.bmh$"  | awk -F\. '{print $1;}'`; do if [[ ! -f bmhs/$host.yaml ]]; then ./oc delete baremetalhosts $host -n bm4; fi; done;
+               if [ "$create" = true ] ; then
+                 while [ "$(./oc get bmh $(ls -1 bmhs | grep "\.yaml$" | awk -F\. '{print $1;}') -n bm4 -o jsonpath='{.status.provisioning.state}')" != "provisioned" ]; do
+                  sleep 30
+                  echo "Waiting for bmh to be provisionned."
+                done
+               fi
                done
           volumeMounts:
             - name: bmhs
